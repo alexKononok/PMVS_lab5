@@ -55,6 +55,42 @@ static struct file_operations dev_operator_fops = {
 
 static struct proc_dir_entry *proc_result;
 
+static ssize_t proc_read(struct file *filp, char *buffer, size_t length, loff_t *offset) {
+    ssize_t cnt;
+    ssize_t ret;
+    int nfirst;
+    int nsecond;
+    int nresult;
+    sscanf(first, "%d", &nfirst);
+    sscanf(second, "%d", &nsecond);
+    if (operand[0] == 'p') {
+        nresult = nfirst * nsecond;
+        sprintf(result, "%d", nresult);
+    }
+    else if (operand[0] == '-') {
+        nresult = nfirst - nsecond;
+        sprintf(result, "%d", nresult);
+    }
+    else if (operand[0] == '+') {
+        nresult = nfirst + nsecond;
+        sprintf(result, "%d", nresult);
+    }
+    else if (operand[0] == '/' && nsecond != 0) {
+        nresult = nfirst / nsecond;
+        sprintf(result, "%d", nresult);
+    }
+    else {
+        sprintf(result, "NaN");
+    }
+    cnt = strlen(result);
+    ret = copy_to_user(buffer, result, cnt);
+    *offset += cnt - ret;
+    if (*offset > cnt)
+        return 0;
+    else
+        return cnt;
+}
+
 static ssize_t dev_first_write(struct file *filp, const char *buff, size_t len, loff_t *off) {
     if (copy_from_user(first, buff, len)) {
         return -EFAULT;
