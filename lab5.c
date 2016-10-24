@@ -55,6 +55,44 @@ static struct file_operations dev_operator_fops = {
 
 static struct proc_dir_entry *proc_result;
 
+
+int init_module(void) {
+    memset(result, 0, 3);
+    major_operand_1 = register_chrdev(0, "first", &dev_first_fops);
+    if (major_operand_1 < 0) {
+        printk(KERN_ALERT
+        "Registering char device failed with %d\n", major_operand_1);
+        return major_operand_1;
+    }
+    major_operand_2 = register_chrdev(0, "second", &dev_second_fops);
+    if (major_operand_2 < 0) {
+        printk(KERN_ALERT
+        "Registering char device failed with %d\n", major_operand_2);
+        return major_operand_2;
+    }
+    major_operator = register_chrdev(0, "operator", &dev_operator_fops);
+    if (major_operator < 0) {
+        printk(KERN_ALERT
+        "Registering char device failed with %d\n", major_operator);
+        return major_operator;
+    }
+    proc_result = proc_create("result", 0, NULL, &fops);
+    if (proc_result == NULL) {
+        printk(KERN_ALERT
+        "Creating proc failed\n");
+        return -1;
+    }
+
+    return 0;
+}
+
+void cleanup_module(void) {
+    unregister_chrdev(major_operand_1, "first");
+    unregister_chrdev(major_operand_2, "second");
+    unregister_chrdev(major_operator, "operator");
+    remove_proc_entry("result", NULL);
+}
+
 static ssize_t proc_read(struct file *filp, char *buffer, size_t length, loff_t *offset) {
     ssize_t cnt;
     ssize_t ret;
